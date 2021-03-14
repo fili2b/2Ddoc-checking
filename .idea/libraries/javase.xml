@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="javase">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Desktop/projet-crypto/zxing-zxing-3.4.1/out/artifacts/javase_jar/javase.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/projet-crypto/chilkat-9.5.0-jdk11-x64/chilkat.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
