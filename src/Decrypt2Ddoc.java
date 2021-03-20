@@ -51,12 +51,10 @@ public class Decrypt2Ddoc {
 
         //Get the right certificate from the URL
         byte[] certificate = getcert(certID, certURL);
-        System.out.println("[Certificate Retrieved]");
+        System.out.println("\n[Certificate Retrieved]");
 
         //Get the CA certificate from the TSL
-        //TODO : parse the TSL to get the x509 certificate string (do not hard code it as below)
-        String certCA = "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";
-        X509Certificate certificateCA = convertToX509Cert(certCA);
+        X509Certificate certificateCA = convertToX509Cert(getcertCAinString(CA));
         System.out.println("[CA Certificate Retrieved]");
 
         //Decode the participant certificate and check the signature with the CA public key
@@ -86,8 +84,7 @@ public class Decrypt2Ddoc {
             MultiFormatReader reader = new MultiFormatReader();// use this otherwise
 
             result = reader.decodeWithState(bitmap);
-            //result = reader.decode(bitmap);
-            System.out.println("Resultat : " + result.getText());
+            System.out.println("[QR code result] " + result.getText());
             return result.getText();
         } catch (NotFoundException e) {
             // TODO Auto-generated catch block
@@ -142,11 +139,35 @@ public class Decrypt2Ddoc {
         NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
         for (int i = 0; i < nodeList.getLength(); ++i) {
             Node node = nodeList.item(i);
-            //System.out.println("\nNode Name :" + node.getNodeName());
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element tElement = (Element) node;
-                //System.out.println("URI: " + tElement.getElementsByTagName("tsl:TSPInformationURI").item(0).getTextContent());
-                return tElement.getElementsByTagName("tsl:TSPInformationURI").item(pos-1).getTextContent();
+                return tElement.getElementsByTagName("tsl:TSPInformationURI").item(pos - 1).getTextContent();
+            }
+        }
+        return null;
+    }
+
+    public static String getcertCAinString(String CA) throws IOException, SAXException, ParserConfigurationException {
+        String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
+        File xmlFile = new File(filename);
+
+        char num = CA.toCharArray()[3];
+        int pos = Character.getNumericValue(num);
+
+        //Parsing the XML file
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        org.w3c.dom.Document doc = builder.parse(xmlFile);
+        doc.getDocumentElement().normalize();
+
+        //Searching for the right tag
+        NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
+        for (int i = 0; i < nodeList.getLength(); ++i) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element tElement = (Element) node;
+                //System.out.println("cert CA string: " + tElement.getElementsByTagName("tsl:X509Certificate").item(0).getTextContent());
+                return tElement.getElementsByTagName("tsl:X509Certificate").item(pos - 1).getTextContent();
             }
         }
         return null;
@@ -155,7 +176,7 @@ public class Decrypt2Ddoc {
     public static byte[] getcert(String certID, String certURL) throws IOException {
         //URL url = new URL(certURL);
         //URL url = new URL("http://certificates.certigna.fr/search.php?name=0001");
-        URL url = new URL("http://certificates.certigna.fr/search.php?name="+certID);
+        URL url = new URL("http://certificates.certigna.fr/search.php?name=" + certID);
 
         /* Ouvre une connection avec l'object URL */
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -173,44 +194,13 @@ public class Decrypt2Ddoc {
         //Le contenu de la reponse GET
         int byteContent;
 
-        while ((byteContent = bis.read(data,0,1024)) != -1) {
+        while ((byteContent = bis.read(data, 0, 1024)) != -1) {
             baos.write(data, 0, byteContent);
         }
 
         byte[] allBytes = baos.toByteArray();
 
-        System.out.println("Taille: "+allBytes.length);
-        return allBytes;
-    }
-
-    public static byte[] getcertCA(String certID) throws IOException {
-        //URL url = new URL(certURL);
-        //URL url = new URL("http://certificates.certigna.fr/search.php?name=0001");
-        URL url = new URL("http://certificates.certigna.fr/search.php?name="+certID);
-
-        /* Ouvre une connection avec l'object URL */
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        //GET method
-        connection.setRequestMethod("GET");
-
-        /* Utilise BufferedReader pour lire ligne par ligne */
-        BufferedInputStream bis = new BufferedInputStream(url.openStream());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        //La ligne courante
-        byte data[] = new byte[1024];
-
-        //Le contenu de la reponse GET
-        int byteContent;
-
-        while ((byteContent = bis.read(data,0,1024)) != -1) {
-            baos.write(data, 0, byteContent);
-        }
-
-        byte[] allBytes = baos.toByteArray();
-
-        System.out.println("Taille: "+allBytes.length);
+        //System.out.println("Taille: " + allBytes.length);
         return allBytes;
     }
 
@@ -245,21 +235,22 @@ public class Decrypt2Ddoc {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate certificate = (X509Certificate) cf.generateCertificate(targetStream);
 
-        System.out.println("Read in the following certificate:");
+        System.out.println("[Read in the participant certificate]");
         System.out.println("\tCertificate for: " + certificate.getSubjectDN());
         System.out.println("\tCertificate issued by: " + certificate.getIssuerDN());
         System.out.println("\tThe certificate is valid from " + certificate.getNotBefore() + " to " + certificate.getNotAfter());
         System.out.println("\tCertificate SN# " + certificate.getSerialNumber());
         System.out.println("\tGenerated with " + certificate.getSigAlgName());
-        System.out.println("\tSignature: "+printByteToHex(certificate.getSignature()));
+        System.out.println("\tSignature: " + printByteToHex(certificate.getSignature()));
         return certificate;
     }
 
-    public static boolean checkSignature(X509Certificate certificate, X509Certificate certificateCA){
+    public static boolean checkSignature(X509Certificate certificate, X509Certificate certificateCA) {
 
         if (!certificateCA.getSubjectDN().equals(certificate.getIssuerDN())) {
             return false;
         }
+        System.out.println("[Verifying Signature]");
         try {
             certificate.verify(certificateCA.getPublicKey());
             System.out.println("\tSignature Verification : OK");
@@ -272,5 +263,4 @@ public class Decrypt2Ddoc {
             return false;
         }
     }
-
 }
