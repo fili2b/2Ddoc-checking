@@ -1,6 +1,3 @@
-import com.chilkatsoft.CkAsn;
-import com.chilkatsoft.CkByteData;
-import com.chilkatsoft.CkXml;
 import com.google.zxing.*;
 import com.google.zxing.common.HybridBinarizer;
 import org.w3c.dom.Element;
@@ -16,36 +13,18 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-
+import java.util.Base64;
 
 public class Decrypt2Ddoc {
-
-    private static class QRInfo {
-        String version = "";
-        String CA = "";
-        String CID = "";
-        String URL = "";
-        String message = "";
-        String signature = "";
-    }
-
-    static {
-        try {
-            System.loadLibrary("chilkat");
-        } catch (UnsatisfiedLinkError e) {
-            System.err.println("Native code library failed to load.\n" + e);
-            System.exit(1);
-        }
-    }
 
     public static void main(String[] args) throws Exception {
         String decodedQR = new String();
 
         System.out.println("======= Start decoding =======");
-        //File QRCodeImage = new File("./images/94-1.jpg");
         File QRCodeImage = new File("./images/2Ddoc.png");
         if (QRCodeImage != null) {
             System.out.println("=======  Image loaded  =======");
@@ -72,16 +51,17 @@ public class Decrypt2Ddoc {
 
         //Get the right certificate from the URL
         byte[] certificate = getcert(certID, certURL);
-        System.out.println("[Certificate] " + certificate);
+        System.out.println("[Certificate Retrieved]");
 
-        decodeASN1(certID, certificate);
+        //Get the CA certificate from the TSL
+        //TODO : parse the TSL to get the x509 certificate string (do not hard code it as below)
+        String certCA = "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";
+        X509Certificate certificateCA = convertToX509Cert(certCA);
+        System.out.println("[CA Certificate Retrieved]");
 
+        //Decode the participant certificate and check the signature with the CA public key
+        checkSignature(decodeX509(certID, certificate), certificateCA);
 
-        //Print the certificate
-        //X509Certificate cert = convertToX509Cert(certificate);
-
-        //extract signature / clé
-        //check signature
     }
 
     public static String readQRCode(File fileName) {
@@ -184,22 +164,15 @@ public class Decrypt2Ddoc {
         connection.setRequestMethod("GET");
 
         /* Utilise BufferedReader pour lire ligne par ligne */
-        //BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         BufferedInputStream bis = new BufferedInputStream(url.openStream());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         //La ligne courante
-        //String inputLine;
         byte data[] = new byte[1024];
-        
+
         //Le contenu de la reponse GET
-        //StringBuffer content = new StringBuffer();
         int byteContent;
 
-        /* Pour chaque ligne dans la reponse GET */
-        /*while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-        }*/
         while ((byteContent = bis.read(data,0,1024)) != -1) {
             baos.write(data, 0, byteContent);
         }
@@ -207,80 +180,97 @@ public class Decrypt2Ddoc {
         byte[] allBytes = baos.toByteArray();
 
         System.out.println("Taille: "+allBytes.length);
-        //Ferme BufferedReader
-        //in.close();
-        //return content.toString();
         return allBytes;
     }
 
+    public static byte[] getcertCA(String certID) throws IOException {
+        //URL url = new URL(certURL);
+        //URL url = new URL("http://certificates.certigna.fr/search.php?name=0001");
+        URL url = new URL("http://certificates.certigna.fr/search.php?name="+certID);
 
-    /*public static X509Certificate convertToX509Cert(String certificateString) throws CertificateException {
+        /* Ouvre une connection avec l'object URL */
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        //GET method
+        connection.setRequestMethod("GET");
+
+        /* Utilise BufferedReader pour lire ligne par ligne */
+        BufferedInputStream bis = new BufferedInputStream(url.openStream());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        //La ligne courante
+        byte data[] = new byte[1024];
+
+        //Le contenu de la reponse GET
+        int byteContent;
+
+        while ((byteContent = bis.read(data,0,1024)) != -1) {
+            baos.write(data, 0, byteContent);
+        }
+
+        byte[] allBytes = baos.toByteArray();
+
+        System.out.println("Taille: "+allBytes.length);
+        return allBytes;
+    }
+
+    public static X509Certificate convertToX509Cert(String certificateString) throws CertificateException {
         X509Certificate certificate = null;
         CertificateFactory cf = null;
         try {
             if (certificateString != null && !certificateString.trim().isEmpty()) {
                 certificateString = certificateString.replace("-----BEGIN CERTIFICATE-----\n", "")
                         .replace("-----END CERTIFICATE-----", ""); // NEED FOR PEM FORMAT CERT STRING
-                byte[] certificateData = Base64.getMimeDecoder().decode(certificateString);
+                byte[] certificateData = Base64.getDecoder().decode(certificateString);
                 cf = CertificateFactory.getInstance("X509");
                 certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateData));
             }
         } catch (CertificateException e) {
             throw new CertificateException(e);
         }
+        return certificate;
+    }
+
+    public static String printByteToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
+    }
+
+    public static X509Certificate decodeX509(String certID, byte[] cert) throws CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        InputStream targetStream = new ByteArrayInputStream(cert);
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate certificate = (X509Certificate) cf.generateCertificate(targetStream);
+
         System.out.println("Read in the following certificate:");
         System.out.println("\tCertificate for: " + certificate.getSubjectDN());
         System.out.println("\tCertificate issued by: " + certificate.getIssuerDN());
         System.out.println("\tThe certificate is valid from " + certificate.getNotBefore() + " to " + certificate.getNotAfter());
         System.out.println("\tCertificate SN# " + certificate.getSerialNumber());
         System.out.println("\tGenerated with " + certificate.getSigAlgName());
+        System.out.println("\tSignature: "+printByteToHex(certificate.getSignature()));
         return certificate;
-    }*/
+    }
 
-    public static void decodeASN1(String certID, byte[] cert) {
-        CkAsn asn = new CkAsn();
-        boolean success;
+    public static boolean checkSignature(X509Certificate certificate, X509Certificate certificateCA){
 
-        CkByteData myData = new CkByteData();
-        myData.appendByteArray(cert);
-
-
-        //  Begin with loading ASN.1 from a binary DER/BER format file.
-        //success = asn.LoadBinaryFile("/home/matthieu/Documents/CIR4/Crypto/Projet/"+certID+".der");
-        success = asn.LoadBinary(myData);
-        if (success != true) {
-            System.out.println(asn.lastErrorText());
-            return;
+        if (!certificateCA.getSubjectDN().equals(certificate.getIssuerDN())) {
+            return false;
         }
-        //  Convert ASN.1 to XML:
-        String strXml = asn.asnToXml();
-        if (asn.get_LastMethodSuccess() != true) {
-            System.out.println(asn.lastErrorText());
-            return;
-        }
-        //  The XML returned by AsnToXml will be compact and not pretty-formatted.
-        //  Use Chilkat XML to format the XML better:
-        CkXml xml = new CkXml();
-        success = xml.LoadXml(strXml);
-        //  Assuming success for this example..
-        //  This is formatted better for human viewing:
-        System.out.println(xml.getXml());
-        //  Now get the ASN.1 in base64 format.  Any encoding supported
-        //  by Chilkat can be passed, such as "hex", "uu", "quoted-printable", "base32", "modbase64", etc.
-        String strBase64 = asn.getEncodedDer("base64");
-        //  Load the ASN.1 from XML:
-        CkAsn asn2 = new CkAsn();
-        success = asn2.LoadAsnXml(xml.getXml());
-        if (success != true) {
-            System.out.println(asn2.lastErrorText());
-            return;
-        }
-        //  Load the ASN.1 from an encoded string, such as base64:
-        CkAsn asn3 = new CkAsn();
-        success = asn3.LoadEncoded(strBase64,"base64");
-        if (success != true) {
-            System.out.println(asn3.lastErrorText());
-            return;
+        try {
+            certificate.verify(certificateCA.getPublicKey());
+            System.out.println("\tSignature Verification : OK");
+            return true;
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e) {
+            System.out.println("\tSignature Verification : KO");
+            return false;
+        } catch (Exception e) {
+            System.out.println("\tSignature Verification : error");
+            return false;
         }
     }
+
 }
