@@ -1,0 +1,117 @@
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.x509.*;
+
+import javax.naming.NamingException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.cert.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CA {
+
+    public static List<String> getCrlDistributionPoints(X509Certificate certificate) throws IOException {
+
+        ASN1InputStream oAsnInStream = new ASN1InputStream(certificate.getExtensionValue(X509Extensions.CRLDistributionPoints.getId()));
+        DERObject derObjCrlDP = oAsnInStream.readObject();
+        DEROctetString dosCrlDP = (DEROctetString) derObjCrlDP;
+        byte[] crldpExtOctets = dosCrlDP.getOctets();
+        ASN1InputStream oAsnInStream2 = new ASN1InputStream(new ByteArrayInputStream(crldpExtOctets));
+        DERObject derObj2 = oAsnInStream2.readObject();
+        CRLDistPoint distPoint = CRLDistPoint.getInstance(derObj2);
+
+        List<String> crlUrls = new ArrayList<>();
+        for (DistributionPoint dp : distPoint.getDistributionPoints()) {
+            DistributionPointName dpn = dp.getDistributionPoint();
+            // Look for URIs in fullName
+            if (dpn != null) {
+                if (dpn.getType() == DistributionPointName.FULL_NAME) {
+                    GeneralName[] genNames = GeneralNames.getInstance(
+                            dpn.getName()).getNames();
+                    // Look for an URI
+                    for (int j = 0; j < genNames.length; j++) {
+                        if (genNames[j].getTagNo() == GeneralName.uniformResourceIdentifier) {
+                            String url = DERIA5String.getInstance(
+                                    genNames[j].getName()).getString();
+                            crlUrls.add(url);
+                        }
+                    }
+                }
+            }
+        }
+        return crlUrls;
+    }
+
+    //Downloads CRL from given URL. Supports http, https, ftp and ldap based URLs.
+    private static X509CRL downloadCRL(String crlURL) throws IOException, CertificateException, CRLException,
+            NamingException {
+        if (crlURL.startsWith("http://") || crlURL.startsWith("https://") || crlURL.startsWith("ftp://")) {
+            return downloadCRLFromWeb(crlURL);
+        } else if (crlURL.startsWith("ldap://")) {
+            System.out.println("Certificate revocation URL has ldap protocol which is not supported. Cannot verify CRL.");
+//            return downloadCRLFromLDAP(crlURL); todo implement this
+            throw new CertificateException("Can not download CRL from certificate distribution point: " + crlURL);
+        } else {
+            throw new CertificateException("Can not download CRL from certificate distribution point: " + crlURL);
+        }
+    }
+
+    /**
+     * Downloads a CRL from given HTTP/HTTPS/FTP URL, e.g.
+     * http://crl.infonotary.com/crl/identity-ca.crl
+     */
+    private static X509CRL downloadCRLFromWeb(String crlURL) throws MalformedURLException,
+            IOException, CertificateException,
+            CRLException {
+        URL url = new URL(crlURL);
+        InputStream crlStream = url.openStream();
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509CRL) cf.generateCRL(crlStream);
+        } finally {
+            crlStream.close();
+        }
+    }
+
+    public static void checkCA(X509Certificate certificate) throws CertificateException {
+
+        System.out.println("[Verifying Revocation]");
+        try {
+            List<String> crlDistPoints = getCrlDistributionPoints(certificate);
+            for (String crlDP : crlDistPoints) {
+                X509CRL crl = downloadCRL(crlDP);
+                if (crl.isRevoked(certificate)) {
+                    throw new CertificateException("\tThe certificate is revoked by CRL: " + crlDP);
+                }
+            }
+            System.out.println("\tThe certificate is not revoked by CRL");
+        } catch (Exception ex) {
+            if (ex instanceof CertificateException) {
+                throw (CertificateException) ex;
+            } else {
+                throw new CertificateException("\tCan not verify CRL for certificate: " + certificate.getSubjectX500Principal());
+            }
+        }
+
+        System.out.println("[Verifying Date]");
+        try {
+            certificate.checkValidity();
+            System.out.println("\tDate Verification : OK");
+            return;
+        }
+        catch (CertificateExpiredException e) {
+            System.out.println("\tDate Verification : Expired Certificate");
+            return;
+        }
+        catch (CertificateNotYetValidException e) {
+            System.out.println("\tDate Verification : Certificate not valid yet");
+            return;
+        }
+    }
+}

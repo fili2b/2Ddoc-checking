@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$USER_HOME$/Desktop/projet-crypto/zxing-zxing-3.4.1/out/artifacts/javase_jar/javase.jar!/" />
       <root url="jar://$USER_HOME$/Desktop/projet-crypto/chilkat-9.5.0-jdk11-x64/chilkat.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/crypto-168/bcprov-jdk16-140.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
