@@ -1,38 +1,24 @@
 import com.google.zxing.*;
 import com.google.zxing.common.HybridBinarizer;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DERIA5String;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.x509.*;
-import org.bouncycastle.asn1.*;
-import org.bouncycastle.asn1.x509.CRLDistPoint;
-import org.bouncycastle.asn1.x509.DistributionPoint;
-import org.bouncycastle.asn1.x509.DistributionPointName;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.x509.GeneralNames;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.apache.commons.codec.binary.Base32;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.DERSequence;
 
 import javax.imageio.ImageIO;
-import javax.naming.NamingException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.cert.*;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 
 public class Decrypt2Ddoc {
 
@@ -55,6 +41,16 @@ public class Decrypt2Ddoc {
         String header = info.getHeader(decodedQR);
         System.out.println("[HEADER] " + header);
 
+        //Get the data of the entire decoded message
+        //TODO
+        String data = info.getMessage(decodedQR);
+        System.out.println("[DATA] " + data);
+
+        //Get the signature of the entire decoded message
+        //TODO
+        String signature2Ddoc = info.getSignature(decodedQR);
+        System.out.println("[SIGNATURE] " + signature2Ddoc);
+
         //Get the ID of the Certificate Authority
         String IdCA = info.getCA(header);
         System.out.println("[CA] " + IdCA);
@@ -68,16 +64,18 @@ public class Decrypt2Ddoc {
         System.out.println("[Certificate URL] " + certURL);
 
         //Get the right Participant certificate from the URL
-        byte[] certificate = getcert(certID, IdCA);
+        byte[] certificate = getParticipantCert(certID, IdCA);
+
+        X509Certificate certPart = decodeX509(certificate);
 
         //Get the CA certificate from the TSL
-        X509Certificate certificateCA = convertToX509Cert(getcertCAinString(IdCA));
-
+        X509Certificate certificateCA = convertToX509Cert(CA.getcertCAinString(IdCA));
 
         System.out.println("\n======= Start checking =======");
         //Check the 2D doc signature with the participant public key
         System.out.println("\n2D-document : checking signature...");
         //TODO
+        verify2Dsignature(certPart, signature2Ddoc,header, data);
 
         //Decode the participant certificate and check the signature with the CA public key
         System.out.println("\nParticipant : checking signature...");
@@ -92,7 +90,10 @@ public class Decrypt2Ddoc {
         System.out.println("\nCertification Authority : checking revocation...");
         CAcertificate.checkCA(certificateCA);
 
-        /* TEST POUR LE FR00 LA */
+        //Decode and verify the TSL
+        //TODO
+
+        // TEST POUR LE FR00 LA
         //String certTest = "MIICVzCCAT8CCQCpMEvcR9M4RTANBgkqhkiG9w0BAQUFADBPMQswCQYDVQQGEwJGUjETMBEGA1UECgwKQUMgREUgVEVTVDEcMBoGA1UECwwTMDAwMiAwMDAwMDAwMDAwMDAwMDENMAsGA1UEAwwERlIwMDAeFw0xMjExMDExMzQ3NDZaFw0xNTExMDExMzQ3NDZaMFcxCzAJBgNVBAYTAkZSMRswGQYDVQQKDBJDRVJUSUZJQ0FUIERFIFRFU1QxHDAaBgNVBAsMEzAwMDIgMDAwMDAwMDAwMDAwMDAxDTALBgNVBAMMBDAwMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASpjw18zWKAiJO+xNQ2550YNKHW4AHXDxxM3M2dni/iKfckBRTo3cDKmNDHRAycxJKEmg+9pz/DkvTaCuB/hMI8MA0GCSqGSIb3DQEBBQUAA4IBAQA6HN+w/bzIdg0ZQF+ELrocplehP7r5JuRJNBAgmoqoER7IonCvKSNUgUVbJ/MB4UKQ6CgzK7AOlCpiViAnBv+i6fg8Dh9evoUcHBiDvbl19+4iREaOoyVZ8RAlkp7VJKrC3s6dJEmI8/19obLbTvdHfY+TZfduqpVl63RSxwLG0Fjl0SAQz9a+KJSKZnEvT9I0iUUgCSnqFt77RSppziQTZ+rkWcfd+BSorWr8BHqOkLtj7EiVamIh+g3A8JtwV7nm+NUbBlhh2UPSI0eevsRjQRghtTiEn0wflVBX7xFP9zXpViHqIj+R9WiXzWGFYyKuAFK1pQ2QH8BxCbvdNdff";
         //checkSignature(convertStringToX509Cert(certTest), convertStringToX509Cert(certTest));
 
@@ -147,33 +148,7 @@ public class Decrypt2Ddoc {
         return null;
     }
 
-    public static String getcertCAinString(String CA) throws IOException, SAXException, ParserConfigurationException {
-
-        String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
-        File xmlFile = new File(filename);
-
-        char num = CA.toCharArray()[3];
-        int pos = Character.getNumericValue(num);
-
-        //Parsing the XML file
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        org.w3c.dom.Document doc = builder.parse(xmlFile);
-        doc.getDocumentElement().normalize();
-
-        //Searching for the right tag
-        NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
-        for (int i = 0; i < nodeList.getLength(); ++i) {
-            Node node = nodeList.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element tElement = (Element) node;
-                return tElement.getElementsByTagName("tsl:X509Certificate").item(pos - 1).getTextContent();
-            }
-        }
-        return null;
-    }
-
-    public static byte[] getcert(String certID, String certCA) throws IOException {
+    public static byte[] getParticipantCert(String certID, String certCA) throws IOException {
 
         URL url;
         switch (certCA) {
@@ -182,16 +157,16 @@ public class Decrypt2Ddoc {
                 byte[] array = cert.getBytes();
                 return array;
             case "FR01":
-                url = new URL("http://cert.pki-2ddoc.ariadnext.fr/pki-2ddoc.der");
+                url = new URL("http://cert.pki-2ddoc.ariadnext.fr/pki-2ddoc.der?name="+certID);
                 break;
             case "FR02":
-                url = new URL("http://pki-2ddoc.sunnystamp.com/certs/pki_fr02_rfc4387_certstore_file.der");
+                url = new URL("http://pki-2ddoc.sunnystamp.com/certs/pki_fr02_rfc4387_certstore_file.der?name="+certID);
                 break;
             case "FR03":
                 url = new URL("http://certificates.certigna.fr/search.php?name=" + certID);
                 break;
             case "FR04":
-                url = new URL("http://pki-g2.ariadnext.fr/pki-2ddoc.der");
+                url = new URL("http://pki-g2.ariadnext.fr/pki-2ddoc.der?name="+certID);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + certCA);
@@ -265,13 +240,35 @@ public class Decrypt2Ddoc {
         System.out.println("\t- Signature: " + printByteToHex(certificate.getSignature()));
     }
 
-    /*public void verify2Dsignature(X509Certificate certificate) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException {
-        X509EncodedKeySpec participantPubKeySpec = new X509EncodedKeySpec(certificate.getSignature());
-        Signature sig = Signature.getInstance("RSA");
+    private static byte[] toDerSignature(byte[] jwsSig) {
+
+        byte[] rBytes = Arrays.copyOfRange(jwsSig, 0, 32);
+        byte[] sBytes = Arrays.copyOfRange(jwsSig, 32, 64);
+
+        BigInteger r = new BigInteger(1, rBytes);
+        BigInteger s = new BigInteger(1, sBytes);
+
+        DERSequence sequence = new DERSequence(new ASN1Encodable[] {
+                new ASN1Integer(r),
+                new ASN1Integer(s)
+        });
+
+        return sequence.getDEREncoded();
+    }
+
+    public static void verify2Dsignature(X509Certificate certificate, String signature2Ddoc, String header, String message) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException {
+        Base32 base32 = new Base32();
+        byte[] signature = base32.decode(signature2Ddoc);
+        Signature sig = Signature.getInstance("SHA256withECDSA");
         sig.initVerify(certificate.getPublicKey());
-        sig.update();
-        sig.verify(signature);
-    }*/
+        String data = header+message;
+        String newData = (new StringBuilder(data)).deleteCharAt(data.length()-1).toString();
+        sig.update(newData.getBytes(StandardCharsets.UTF_8));
+        if (sig.verify(toDerSignature(signature)) == true)
+            System.out.println("Signature 2D Doc : OK");
+        else
+            System.out.println("Signature 2D Doc : KO");
+    }
 
     public static boolean checkSignature(X509Certificate certificate, X509Certificate certificateCA) {
 

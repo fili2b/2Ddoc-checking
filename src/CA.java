@@ -3,9 +3,17 @@ import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.x509.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.naming.NamingException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -15,6 +23,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CA {
+
+    public static String getcertCAinString(String CA) throws IOException, SAXException, ParserConfigurationException {
+
+        String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
+        File xmlFile = new File(filename);
+
+        char num = CA.toCharArray()[3];
+        int pos = Character.getNumericValue(num);
+
+        //Parsing the XML file
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        org.w3c.dom.Document doc = builder.parse(xmlFile);
+        doc.getDocumentElement().normalize();
+
+        //Searching for the right tag
+        NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
+        for (int i = 0; i < nodeList.getLength(); ++i) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element tElement = (Element) node;
+                return tElement.getElementsByTagName("tsl:X509Certificate").item(pos - 1).getTextContent();
+            }
+        }
+        return null;
+    }
 
     public static List<String> getCrlDistributionPoints(X509Certificate certificate) throws IOException {
 
