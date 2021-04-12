@@ -12,10 +12,8 @@ import javax.naming.NamingException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.*;
@@ -52,34 +50,38 @@ public class CA {
 
     public static List<String> getCrlDistributionPoints(X509Certificate certificate) throws IOException {
 
-        ASN1InputStream oAsnInStream = new ASN1InputStream(certificate.getExtensionValue(X509Extensions.CRLDistributionPoints.getId()));
-        DERObject derObjCrlDP = oAsnInStream.readObject();
-        DEROctetString dosCrlDP = (DEROctetString) derObjCrlDP;
-        byte[] crldpExtOctets = dosCrlDP.getOctets();
-        ASN1InputStream oAsnInStream2 = new ASN1InputStream(new ByteArrayInputStream(crldpExtOctets));
-        DERObject derObj2 = oAsnInStream2.readObject();
-        CRLDistPoint distPoint = CRLDistPoint.getInstance(derObj2);
+        if(certificate.getExtensionValue(X509Extensions.CRLDistributionPoints.getId()) != null) {
+            ASN1InputStream oAsnInStream = new ASN1InputStream(certificate.getExtensionValue(X509Extensions.CRLDistributionPoints.getId()));
+            DERObject derObjCrlDP = oAsnInStream.readObject();
+            DEROctetString dosCrlDP = (DEROctetString) derObjCrlDP;
+            byte[] crldpExtOctets = dosCrlDP.getOctets();
+            ASN1InputStream oAsnInStream2 = new ASN1InputStream(new ByteArrayInputStream(crldpExtOctets));
+            DERObject derObj2 = oAsnInStream2.readObject();
+            CRLDistPoint distPoint = CRLDistPoint.getInstance(derObj2);
 
-        List<String> crlUrls = new ArrayList<>();
-        for (DistributionPoint dp : distPoint.getDistributionPoints()) {
-            DistributionPointName dpn = dp.getDistributionPoint();
-            // Look for URIs in fullName
-            if (dpn != null) {
-                if (dpn.getType() == DistributionPointName.FULL_NAME) {
-                    GeneralName[] genNames = GeneralNames.getInstance(
-                            dpn.getName()).getNames();
-                    // Look for an URI
-                    for (int j = 0; j < genNames.length; j++) {
-                        if (genNames[j].getTagNo() == GeneralName.uniformResourceIdentifier) {
-                            String url = DERIA5String.getInstance(
-                                    genNames[j].getName()).getString();
-                            crlUrls.add(url);
+            List<String> crlUrls = new ArrayList<>();
+            for (DistributionPoint dp : distPoint.getDistributionPoints()) {
+                DistributionPointName dpn = dp.getDistributionPoint();
+                // Look for URIs in fullName
+                if (dpn != null) {
+                    if (dpn.getType() == DistributionPointName.FULL_NAME) {
+                        GeneralName[] genNames = GeneralNames.getInstance(
+                                dpn.getName()).getNames();
+                        // Look for an URI
+                        for (int j = 0; j < genNames.length; j++) {
+                            if (genNames[j].getTagNo() == GeneralName.uniformResourceIdentifier) {
+                                String url = DERIA5String.getInstance(
+                                        genNames[j].getName()).getString();
+                                crlUrls.add(url);
+                            }
                         }
                     }
                 }
             }
+            return crlUrls;
         }
-        return crlUrls;
+        else
+            return null;
     }
 
     //Downloads CRL from given URL. Supports http, https, ftp and ldap based URLs.
@@ -113,23 +115,29 @@ public class CA {
         }
     }
 
-    public static void checkCA(X509Certificate certificate) throws CertificateException {
+    public static void checkRevocation(X509Certificate certificate) throws CertificateException, IOException, CRLException, NamingException {
 
         System.out.println("[Verifying Revocation]");
         try {
             List<String> crlDistPoints = getCrlDistributionPoints(certificate);
-            for (String crlDP : crlDistPoints) {
-                X509CRL crl = downloadCRL(crlDP);
-                if (crl.isRevoked(certificate)) {
-                    throw new CertificateException("\tThe certificate is revoked by CRL: " + crlDP);
-                }
+            if (crlDistPoints == null){
+                System.out.println("\tThe certificate is revoked");
+                return;
             }
-            System.out.println("\tThe certificate is not revoked by CRL");
-        } catch (Exception ex) {
+            else {
+                for (String crlDP : crlDistPoints) {
+                    X509CRL crl = downloadCRL(crlDP);
+                    if (crl.isRevoked(certificate)) {
+                        throw new CertificateException("\tThe certificate is revoked by CRL: " + crlDP);
+                    }
+                }
+                System.out.println("\tThe certificate is not revoked by CRL");
+            }
+        } catch(Exception ex){
             if (ex instanceof CertificateException) {
                 throw (CertificateException) ex;
             } else {
-                throw new CertificateException("\tCan not verify CRL for certificate: " + certificate.getSubjectX500Principal());
+                throw new CertificateException("Can not verify CRL for certificate " + certificate.getSubjectX500Principal());
             }
         }
 
@@ -138,14 +146,58 @@ public class CA {
             certificate.checkValidity();
             System.out.println("\tDate Verification : OK");
             return;
-        }
-        catch (CertificateExpiredException e) {
+        } catch (CertificateExpiredException e) {
             System.out.println("\tDate Verification : Expired Certificate");
             return;
-        }
-        catch (CertificateNotYetValidException e) {
+        } catch (CertificateNotYetValidException e) {
             System.out.println("\tDate Verification : Certificate not valid yet");
             return;
         }
+    }
+
+    public static String retrieveTSLCertificate() throws IOException, SAXException, ParserConfigurationException {
+
+        String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
+        File xmlFile = new File(filename);
+
+        //Parsing the XML file
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        org.w3c.dom.Document doc = builder.parse(xmlFile);
+        doc.getDocumentElement().normalize();
+
+        //Searching for the right tag
+        NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
+        for (int i = 0; i < nodeList.getLength(); ++i) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element tElement = (Element) node;
+                return tElement.getElementsByTagName("ds:X509Certificate").item(0).getTextContent();
+            }
+        }
+        return null;
+    }
+
+    public static String retrieveTSLSignature() throws IOException, SAXException, ParserConfigurationException {
+
+        String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
+        File xmlFile = new File(filename);
+
+        //Parsing the XML file
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        org.w3c.dom.Document doc = builder.parse(xmlFile);
+        doc.getDocumentElement().normalize();
+
+        //Searching for the right tag
+        NodeList nodeList = doc.getElementsByTagName("tsl:TrustServiceStatusList");
+        for (int i = 0; i < nodeList.getLength(); ++i) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element tElement = (Element) node;
+                return tElement.getElementsByTagName("ds:SignatureValue").item(0).getTextContent();
+            }
+        }
+        return null;
     }
 }

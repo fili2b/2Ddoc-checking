@@ -3,6 +3,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -16,6 +17,7 @@ public class Info2Ddoc {
     private int headerSize;
     private String message;
     private String signature;
+    private String DocType;
 
     public String getHeader(String data) {
         char[] dataArray = data.toCharArray();
@@ -49,6 +51,68 @@ public class Info2Ddoc {
         header.getChars(8, 12, certID, 0);
         return String.valueOf(certID);
     }
+
+    /*public static String getDocType(String header) {
+        char[] TabDocType = new char[2];
+        header.getChars(20, 22, TabDocType, 0);
+
+        String DocTypeID = String.valueOf(TabDocType);
+
+        switch (DocTypeID){
+            case "00":
+                return "Justificatif de domicile - Document  émis  spécifiquement  pour servir de justificatif de domicile.";
+            case "01":
+                return "Justificatif de domicile - Factures de fournisseur d’énergie | Factures de téléphonie| Factures defournisseur d’accès internet | Factures de fournisseur d’eau";
+            case "02":
+                return "Justificatif de domicile - Avis de taxe d’habitation";
+            case "03":
+                return "Justificatif  de  domiciliation bancaire - Relevé d’identité bancaire";
+            case "05":
+                return "Justificatif  de  domiciliation bancaire - Relevé d’Identité SEPAmail";
+            case "04":
+                return "Justificatif de ressources - Avis d’impôt sur le revenu";
+            case "06":
+                return "Justificatif de ressources - Bulletin de salaire";
+            case "11":
+                return "Justificatif de ressources - Relevé de compte";
+            case "07":
+                return "Justificatif d’identité - Titre d’identité";
+            case "08":
+                return "Justificatif d’identité - MRZ";
+            case "13":
+                return "Justificatif d’identité - Document étranger";
+            case "09":
+                return "Justificatif fiscal - Facture étendue";
+            case "10":
+                return "Justificatif d’emploi - Contrat de travail";
+            case "A0":
+                return "Justificatif écologique de véhicule - Certificat de qualité de l’air";
+            case "A7":
+                return "Justificatif écologique de véhicule - Certificat de qualité de l’air (V2)";
+            case "A1":
+                return "Justificatif permis de conduire - Courrier Permis à Points";
+            case "A2":
+                return "Justificatif de santé - Carte Mobilité Inclusion (CMI)";
+            case "A3":
+                return "Justificatif d’activité - Macaron  VTC (Véhicule  de  Transport avec Chauffeur)";
+            case "A5":
+                return "Justificatif d’activité - Carte T3P(Transport Public Particulier de Personnes)";
+            case "A6":
+                return "Justificatif d’activité - Carte Professionnelle Sapeur-Pompier";
+            case "A4":
+                return "Justificatif médical - Certificat de décès";
+            case "B0":
+                return "Justificatif académique - Diplôme";
+            case "B1":
+                return "Justificatif académique - Attestation de Versement de la Contribution à la Vie Etudiante";
+            case "12":
+                return "Justificatifjuridique/judiciaire - Acte d’huissier";
+            case "A8":
+                return "Certificat d’immatriculation - Certificat de cession électronique";
+            default:
+                return "Inconnu (ID:'"+DocTypeID+"')";
+        }
+    }*/
 
     public static String getcertURL(String CA) throws IOException, SAXException, ParserConfigurationException {
         String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";

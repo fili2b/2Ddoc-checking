@@ -4,8 +4,12 @@ import org.apache.commons.codec.binary.Base32;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
+import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
+import javax.xml.crypto.dsig.XMLSignature;
+import javax.xml.crypto.dsig.XMLSignatureException;
+import javax.xml.crypto.dsig.dom.DOMValidateContext;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
@@ -20,6 +24,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
 
+//import javax.xml.*;
+
 public class Decrypt2Ddoc {
 
     public static void main(String[] args) throws Exception {
@@ -29,7 +35,7 @@ public class Decrypt2Ddoc {
 
         //Decode the image into a string
         System.out.println("======= Start decoding =======");
-        File QRCodeImage = new File("./images/DC04-FR03.png");
+        File QRCodeImage = new File("./images/DC04-FR00.png");
         if (QRCodeImage != null) {
             decodedQR = readQRCode(QRCodeImage);
         } else {
@@ -42,12 +48,14 @@ public class Decrypt2Ddoc {
         System.out.println("[HEADER] " + header);
 
         //Get the data of the entire decoded message
-        //TODO
         String data = info.getMessage(decodedQR);
         System.out.println("[DATA] " + data);
 
+        //Display the contain of the message
+        DisplayInfo disInfo = new DisplayInfo();
+        disInfo.printMessageInfo(data);
+
         //Get the signature of the entire decoded message
-        //TODO
         String signature2Ddoc = info.getSignature(decodedQR);
         System.out.println("[SIGNATURE] " + signature2Ddoc);
 
@@ -59,62 +67,78 @@ public class Decrypt2Ddoc {
         String certID = info.getcertID(header);
         System.out.println("[Certificate ID] " + certID);
 
+        //Get the Document's type
+       // String DocType = info.getDocType(header);
+        //System.out.println("[Doc Type] " + DocType);
+
         //Get the url for all certificates
-        String certURL = Info2Ddoc.getcertURL(IdCA);
-        System.out.println("[Certificate URL] " + certURL);
+        if(!IdCA.equals("FR00")){
+            String certURL = Info2Ddoc.getcertURL(IdCA);
+            System.out.println("[Certificate URL] " + certURL);
+        }
 
         //Get the right Participant certificate from the URL
-        byte[] certificate = getParticipantCert(certID, IdCA);
-
-        X509Certificate certPart = decodeX509(certificate);
+        String cert = null;
+        byte[] certificate;
+        X509Certificate certPart = null;
+        if(!IdCA.equals("FR00")){
+            certificate = getParticipantCert(certID, IdCA);
+            certPart = decodeX509(certificate);
+        }
+        else
+            cert = "MIICVzCCAT8CCQCpMEvcR9M4RTANBgkqhkiG9w0BAQUFADBPMQswCQYDVQQGEwJGUjETMBEGA1UECgwKQUMgREUgVEVTVDEcMBoGA1UECwwTMDAwMiAwMDAwMDAwMDAwMDAwMDENMAsGA1UEAwwERlIwMDAeFw0xMjExMDExMzQ3NDZaFw0xNTExMDExMzQ3NDZaMFcxCzAJBgNVBAYTAkZSMRswGQYDVQQKDBJDRVJUSUZJQ0FUIERFIFRFU1QxHDAaBgNVBAsMEzAwMDIgMDAwMDAwMDAwMDAwMDAxDTALBgNVBAMMBDAwMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASpjw18zWKAiJO+xNQ2550YNKHW4AHXDxxM3M2dni/iKfckBRTo3cDKmNDHRAycxJKEmg+9pz/DkvTaCuB/hMI8MA0GCSqGSIb3DQEBBQUAA4IBAQA6HN+w/bzIdg0ZQF+ELrocplehP7r5JuRJNBAgmoqoER7IonCvKSNUgUVbJ/MB4UKQ6CgzK7AOlCpiViAnBv+i6fg8Dh9evoUcHBiDvbl19+4iREaOoyVZ8RAlkp7VJKrC3s6dJEmI8/19obLbTvdHfY+TZfduqpVl63RSxwLG0Fjl0SAQz9a+KJSKZnEvT9I0iUUgCSnqFt77RSppziQTZ+rkWcfd+BSorWr8BHqOkLtj7EiVamIh+g3A8JtwV7nm+NUbBlhh2UPSI0eevsRjQRghtTiEn0wflVBX7xFP9zXpViHqIj+R9WiXzWGFYyKuAFK1pQ2QH8BxCbvdNdff";
 
         //Get the CA certificate from the TSL
-        X509Certificate certificateCA = convertToX509Cert(CA.getcertCAinString(IdCA));
+        X509Certificate certificateCA = null;
+        if(!IdCA.equals("FR00")) {
+            certificateCA = convertToX509Cert(CA.getcertCAinString(IdCA));
+        }
 
         System.out.println("\n======= Start checking =======");
         //Check the 2D doc signature with the participant public key
         System.out.println("\n2D-document : checking signature...");
-        //TODO
-        verify2Dsignature(certPart, signature2Ddoc,header, data);
-
+        if(!IdCA.equals("FR00")) {
+            verify2Dsignature(certPart, signature2Ddoc, header, data);
+        } else {
+            readCertificateInfo(convertStringToX509Cert(cert));
+            verify2Dsignature(convertStringToX509Cert(cert), signature2Ddoc, header, data);
+        }
         //Decode the participant certificate and check the signature with the CA public key
-        System.out.println("\nParticipant : checking signature...");
-        checkSignature(decodeX509(certificate), certificateCA);
-        readCertificateInfo(decodeX509(certificate));
+        if(!IdCA.equals("FR00")){
+            System.out.println("\nParticipant : checking signature...");
+            checkSignature(certPart, certificateCA);
+            readCertificateInfo(certPart);
+        }
 
         //Decode and verify the date validity and the revocation of the Participant certificate
         System.out.println("\nParticipant : checking revocation...");
-        CAcertificate.checkCA(decodeX509(certificate));
+        if(IdCA.equals("FR00")) {
+            CAcertificate.checkRevocation(convertStringToX509Cert(cert));
+        } else{
+            CAcertificate.checkRevocation(certPart);
+        }
 
         //Decode and verify the date validity and the revocation of the CA certificate
         System.out.println("\nCertification Authority : checking revocation...");
-        CAcertificate.checkCA(certificateCA);
-
+        if(!IdCA.equals("FR00")) {
+            CAcertificate.checkRevocation(certificateCA);
+        }
+        
         //Decode and verify the TSL
         //TODO
+        String TSLcertificate = CA.retrieveTSLCertificate();
+        TSLcertificate = TSLcertificate.replaceAll("\\s", "");
+        TSLcertificate = TSLcertificate.replaceAll(String.valueOf(Character.LINE_SEPARATOR), "");
+        System.out.println("\nTSL certificate : "+TSLcertificate);
+        String TSLsignature = CA.retrieveTSLSignature();
+        System.out.println("\nTSL signature : "+TSLsignature);
 
-        // TEST POUR LE FR00 LA
-        //String certTest = "MIICVzCCAT8CCQCpMEvcR9M4RTANBgkqhkiG9w0BAQUFADBPMQswCQYDVQQGEwJGUjETMBEGA1UECgwKQUMgREUgVEVTVDEcMBoGA1UECwwTMDAwMiAwMDAwMDAwMDAwMDAwMDENMAsGA1UEAwwERlIwMDAeFw0xMjExMDExMzQ3NDZaFw0xNTExMDExMzQ3NDZaMFcxCzAJBgNVBAYTAkZSMRswGQYDVQQKDBJDRVJUSUZJQ0FUIERFIFRFU1QxHDAaBgNVBAsMEzAwMDIgMDAwMDAwMDAwMDAwMDAxDTALBgNVBAMMBDAwMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASpjw18zWKAiJO+xNQ2550YNKHW4AHXDxxM3M2dni/iKfckBRTo3cDKmNDHRAycxJKEmg+9pz/DkvTaCuB/hMI8MA0GCSqGSIb3DQEBBQUAA4IBAQA6HN+w/bzIdg0ZQF+ELrocplehP7r5JuRJNBAgmoqoER7IonCvKSNUgUVbJ/MB4UKQ6CgzK7AOlCpiViAnBv+i6fg8Dh9evoUcHBiDvbl19+4iREaOoyVZ8RAlkp7VJKrC3s6dJEmI8/19obLbTvdHfY+TZfduqpVl63RSxwLG0Fjl0SAQz9a+KJSKZnEvT9I0iUUgCSnqFt77RSppziQTZ+rkWcfd+BSorWr8BHqOkLtj7EiVamIh+g3A8JtwV7nm+NUbBlhh2UPSI0eevsRjQRghtTiEn0wflVBX7xFP9zXpViHqIj+R9WiXzWGFYyKuAFK1pQ2QH8BxCbvdNdff";
-        //checkSignature(convertStringToX509Cert(certTest), convertStringToX509Cert(certTest));
+        X509Certificate TSLX509Cert = convertStringToX509Cert(TSLcertificate);
+        //readCertificateInfo(TSLX509Cert);
+
+        checkTSLSignature(TSLX509Cert, TSLsignature, TSLcertificate);
 
     }
-
-    /*public static X509Certificate convertStringToX509Cert(String certificateString) throws CertificateException {
-        X509Certificate certificate = null;
-        CertificateFactory cf = null;
-        try {
-            if (certificateString != null && !certificateString.trim().isEmpty()) {
-                certificateString = certificateString.replace("-----BEGIN CERTIFICATE-----\n", "")
-                        .replace("-----END CERTIFICATE-----", ""); // NEED FOR PEM FORMAT CERT STRING
-                byte[] certificateData = Base64.getDecoder().decode(certificateString);
-                cf = CertificateFactory.getInstance("X509");
-                certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateData));
-            }
-        } catch (CertificateException e) {
-            throw new CertificateException(e);
-        }
-        return certificate;
-    }*/
 
     public static String readQRCode(File fileName) {
         BufferedImage image;
@@ -152,10 +176,6 @@ public class Decrypt2Ddoc {
 
         URL url;
         switch (certCA) {
-            case "FR00":
-                String cert = "MIICVzCCAT8CCQCpMEvcR9M4RTANBgkqhkiG9w0BAQUFADBPMQswCQYDVQQGEwJGUjETMBEGA1UECgwKQUMgREUgVEVTVDEcMBoGA1UECwwTMDAwMiAwMDAwMDAwMDAwMDAwMDENMAsGA1UEAwwERlIwMDAeFw0xMjExMDExMzQ3NDZaFw0xNTExMDExMzQ3NDZaMFcxCzAJBgNVBAYTAkZSMRswGQYDVQQKDBJDRVJUSUZJQ0FUIERFIFRFU1QxHDAaBgNVBAsMEzAwMDIgMDAwMDAwMDAwMDAwMDAxDTALBgNVBAMMBDAwMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASpjw18zWKAiJO+xNQ2550YNKHW4AHXDxxM3M2dni/iKfckBRTo3cDKmNDHRAycxJKEmg+9pz/DkvTaCuB/hMI8MA0GCSqGSIb3DQEBBQUAA4IBAQA6HN+w/bzIdg0ZQF+ELrocplehP7r5JuRJNBAgmoqoER7IonCvKSNUgUVbJ/MB4UKQ6CgzK7AOlCpiViAnBv+i6fg8Dh9evoUcHBiDvbl19+4iREaOoyVZ8RAlkp7VJKrC3s6dJEmI8/19obLbTvdHfY+TZfduqpVl63RSxwLG0Fjl0SAQz9a+KJSKZnEvT9I0iUUgCSnqFt77RSppziQTZ+rkWcfd+BSorWr8BHqOkLtj7EiVamIh+g3A8JtwV7nm+NUbBlhh2UPSI0eevsRjQRghtTiEn0wflVBX7xFP9zXpViHqIj+R9WiXzWGFYyKuAFK1pQ2QH8BxCbvdNdff";
-                byte[] array = cert.getBytes();
-                return array;
             case "FR01":
                 url = new URL("http://cert.pki-2ddoc.ariadnext.fr/pki-2ddoc.der?name="+certID);
                 break;
@@ -198,6 +218,23 @@ public class Decrypt2Ddoc {
     }
 
     public static X509Certificate convertToX509Cert(String certificateString) throws CertificateException {
+        X509Certificate certificate = null;
+        CertificateFactory cf = null;
+        try {
+            if (certificateString != null && !certificateString.trim().isEmpty()) {
+                certificateString = certificateString.replace("-----BEGIN CERTIFICATE-----\n", "")
+                        .replace("-----END CERTIFICATE-----", ""); // NEED FOR PEM FORMAT CERT STRING
+                byte[] certificateData = Base64.getDecoder().decode(certificateString);
+                cf = CertificateFactory.getInstance("X509");
+                certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateData));
+            }
+        } catch (CertificateException e) {
+            throw new CertificateException(e);
+        }
+        return certificate;
+    }
+
+    public static X509Certificate convertStringToX509Cert(String certificateString) throws CertificateException {
         X509Certificate certificate = null;
         CertificateFactory cf = null;
         try {
@@ -288,5 +325,33 @@ public class Decrypt2Ddoc {
             System.out.println("\tSignature Verification : error");
             return false;
         }
+    }
+
+    public static void checkTSLSignature(X509Certificate TSLcertificate, String signature, String test) throws Exception {
+
+        /*System.out.println("[Verifying TSL Signature]");
+        try {
+            TSLcertificate.verify(TSLcertificate.getPublicKey());
+            System.out.println("\tSignature Verification : OK");
+            return;
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e) {
+            System.out.println("\tSignature Verification : KO");
+            return;
+        } catch (Exception e) {
+            System.out.println("\tSignature Verification : error -> "+e);
+            return;
+        }*/
+        byte[] sign = Base64.getDecoder().decode(signature);
+        Signature sig = Signature.getInstance("SHA256withRSA");
+        sig.initVerify(TSLcertificate.getPublicKey());
+        String BIGdataTSL = "";
+        sig.update(BIGdataTSL.getBytes(StandardCharsets.UTF_8));
+        VerifySignature verif = new VerifySignature();
+        boolean isValid = verif.isXmlDigitalSignatureValid( "./ANTS_2D-DOc_TSL_230713_v3_signed.xml",TSLcertificate.getPublicKey());
+        if (isValid == true)
+            System.out.println("Signature TSL : OK");
+        else
+            System.out.println("Signature TSL : KO");
+
     }
 }
