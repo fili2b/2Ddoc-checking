@@ -94,7 +94,7 @@
          <tsl:TSPServices>
             <tsl:TSPService>
                <tsl:ServiceInformation>
-                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/PKC</tsl:ServiceTypeIdentifier>
+                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CertificateManage/PKC</tsl:ServiceTypeIdentifier>
                   <tsl:ServiceName>
                      <tsl:Name xml:lang="en">AriadNEXT 2D-Doc Barcode signature</tsl:Name>
                      <tsl:Name xml:lang="fr">AriadNEXT 2D-Doc Barcode signature</tsl:Name>
@@ -149,7 +149,7 @@
          <tsl:TSPServices>
             <tsl:TSPService>
                <tsl:ServiceInformation>
-                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/PKC</tsl:ServiceTypeIdentifier>
+                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CertificateManage/PKC</tsl:ServiceTypeIdentifier>
                   <tsl:ServiceName>
                      <tsl:Name xml:lang="en">LEX PERSONA 2D-Doc Barcode signature</tsl:Name>
                      <tsl:Name xml:lang="fr">LEX PERSONA 2D-Doc Barcode signature</tsl:Name>
@@ -164,7 +164,7 @@
                </tsl:ServiceInformation>
                <tsl:ServiceHistory>
                   <tsl:ServiceHistoryInstance>
-                     <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/PKC</tsl:ServiceTypeIdentifier>
+                     <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CertificateManage/PKC</tsl:ServiceTypeIdentifier>
                      <tsl:ServiceName>
                         <tsl:Name xml:lang="en">LEX PERSONA 2D-Doc Barcode signature</tsl:Name>
                         <tsl:Name xml:lang="fr">LEX PERSONA 2D-Doc Barcode signature</tsl:Name>
@@ -218,7 +218,7 @@
          <tsl:TSPServices>
             <tsl:TSPService>
                <tsl:ServiceInformation>
-                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/PKC</tsl:ServiceTypeIdentifier>
+                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CertificateManage/PKC</tsl:ServiceTypeIdentifier>
                   <tsl:ServiceName>
                      <tsl:Name xml:lang="en">DHIMYOTIS 2D-Doc Barcode signature</tsl:Name>
                      <tsl:Name xml:lang="fr">DHIMYOTIS 2D-Doc Barcode signature</tsl:Name>
@@ -273,7 +273,7 @@
          <tsl:TSPServices>
             <tsl:TSPService>
                <tsl:ServiceInformation>
-                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/PKC</tsl:ServiceTypeIdentifier>
+                  <tsl:ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CertificateManage/PKC</tsl:ServiceTypeIdentifier>
                   <tsl:ServiceName>
                      <tsl:Name xml:lang="en">AriadNEXT FR04 2D-Doc Barcode signature</tsl:Name>
                      <tsl:Name xml:lang="fr">AriadNEXT FR04 2D-Doc Barcode signature</tsl:Name>

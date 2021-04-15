@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DisplayInfo {
-    //private Triple[] idList = new Triple[218];
     private List<Triple> idList = new ArrayList<Triple>();
     private Integer indice = 0;
 
@@ -230,7 +229,7 @@ public class DisplayInfo {
         this.idList.add(new Triple("C7", "Prénom de l’acheteur", null));
         this.idList.add(new Triple("C8", "Ligne 4 de la norme adresse postale du domicile de l’acheteur", null));
         this.idList.add(new Triple("C9", "Code postal ou code cedex du domicile de l’acheteur", 5));
-        this.idList.add(new Triple("CA", "Commune du domicile de l’acheteur", null));
+        this.idList.add(new Triple("CertificateManage", "Commune du domicile de l’acheteur", null));
         this.idList.add(new Triple("CB", "CN° d’enregistrement", 10));
         this.idList.add(new Triple("CC", "Date et heure d'enregistrement dans le SIV", 12));
     }

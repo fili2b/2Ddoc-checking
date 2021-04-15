@@ -1,12 +1,16 @@
+import com.google.zxing.*;
+import com.google.zxing.common.HybridBinarizer;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.imageio.ImageIO;
 import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +22,38 @@ public class Info2Ddoc {
     private String message;
     private String signature;
     private String DocType;
+
+    public static String readQRCode(File fileName) {
+        BufferedImage image;
+        BinaryBitmap bitmap = null;
+        Result result;
+
+        try {
+            image = ImageIO.read(fileName);
+            int[] pixels = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+            RGBLuminanceSource source = new RGBLuminanceSource(image.getWidth(), image.getHeight(), pixels);
+            bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        if (bitmap == null)
+            return null;
+
+        try {
+            MultiFormatReader reader = new MultiFormatReader();// use this otherwise
+
+            result = reader.decodeWithState(bitmap);
+            System.out.println("[QR code result] " + result.getText()+"\n");
+            return result.getText();
+        } catch (NotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     public String getHeader(String data) {
         char[] dataArray = data.toCharArray();
@@ -52,7 +88,7 @@ public class Info2Ddoc {
         return String.valueOf(certID);
     }
 
-    /*public static String getDocType(String header) {
+    public static String getDocType(String header) {
         char[] TabDocType = new char[2];
         header.getChars(20, 22, TabDocType, 0);
 
@@ -112,7 +148,7 @@ public class Info2Ddoc {
             default:
                 return "Inconnu (ID:'"+DocTypeID+"')";
         }
-    }*/
+    }
 
     public static String getcertURL(String CA) throws IOException, SAXException, ParserConfigurationException {
         String filename = "./ANTS_2D-DOc_TSL_230713_v3_signed.xml";
