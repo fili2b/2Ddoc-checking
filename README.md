@@ -1,4 +1,5 @@
-# 2Ddoc-checking  https://badges.pufler.dev/visits/fili2b/2Ddoc-checking
+# 2Ddoc-checking
+https://badges.pufler.dev/visits/fili2b/2Ddoc-checking
 
 Created by Alexis STOELTZLEN and Thérèse FILI for a cryptographic project.
 
