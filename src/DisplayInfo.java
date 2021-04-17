@@ -9,10 +9,10 @@ public class DisplayInfo {
 
 
     DisplayInfo() {
-        setTupleList();
+        setTripleList();
     }
 
-    public void setTupleList() {
+    public void setTripleList() {
         this.idList.add(new Triple("01", "Identifiant unique du document", null));
         this.idList.add(new Triple("02", "Catégorie de document", null));
         this.idList.add(new Triple("03", "Sous-catégorie de document", null));

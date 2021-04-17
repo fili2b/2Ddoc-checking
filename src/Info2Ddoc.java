@@ -21,7 +21,6 @@ public class Info2Ddoc {
     private int headerSize;
     private String message;
     private String signature;
-    private String DocType;
 
     public static String readQRCode(File fileName) {
         BufferedImage image;

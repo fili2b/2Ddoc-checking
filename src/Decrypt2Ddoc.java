@@ -81,7 +81,7 @@ public class Decrypt2Ddoc {
         else
             cert = "MIICVzCCAT8CCQCpMEvcR9M4RTANBgkqhkiG9w0BAQUFADBPMQswCQYDVQQGEwJGUjETMBEGA1UECgwKQUMgREUgVEVTVDEcMBoGA1UECwwTMDAwMiAwMDAwMDAwMDAwMDAwMDENMAsGA1UEAwwERlIwMDAeFw0xMjExMDExMzQ3NDZaFw0xNTExMDExMzQ3NDZaMFcxCzAJBgNVBAYTAkZSMRswGQYDVQQKDBJDRVJUSUZJQ0FUIERFIFRFU1QxHDAaBgNVBAsMEzAwMDIgMDAwMDAwMDAwMDAwMDAxDTALBgNVBAMMBDAwMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASpjw18zWKAiJO+xNQ2550YNKHW4AHXDxxM3M2dni/iKfckBRTo3cDKmNDHRAycxJKEmg+9pz/DkvTaCuB/hMI8MA0GCSqGSIb3DQEBBQUAA4IBAQA6HN+w/bzIdg0ZQF+ELrocplehP7r5JuRJNBAgmoqoER7IonCvKSNUgUVbJ/MB4UKQ6CgzK7AOlCpiViAnBv+i6fg8Dh9evoUcHBiDvbl19+4iREaOoyVZ8RAlkp7VJKrC3s6dJEmI8/19obLbTvdHfY+TZfduqpVl63RSxwLG0Fjl0SAQz9a+KJSKZnEvT9I0iUUgCSnqFt77RSppziQTZ+rkWcfd+BSorWr8BHqOkLtj7EiVamIh+g3A8JtwV7nm+NUbBlhh2UPSI0eevsRjQRghtTiEn0wflVBX7xFP9zXpViHqIj+R9WiXzWGFYyKuAFK1pQ2QH8BxCbvdNdff";
 
-        //Get the CertificateManage certificate from the TSL
+        //Get the CA certificate from the TSL
         X509Certificate certificateCA = null;
         if(!IdCA.equals("FR00")) {
             certificateCA = convertToX509Cert(CertificateManage.getcertCAinString(IdCA));
@@ -95,7 +95,7 @@ public class Decrypt2Ddoc {
         } else {
             verify2Dsignature(CertificateManage.convertStringToX509Cert(cert), signature2Ddoc, header, data);
         }
-        //Decode the participant certificate and check the signature with the CertificateManage public key
+        //Decode the participant certificate and check the signature with the CA public key
         if(!IdCA.equals("FR00")){
             System.out.println("\nParticipant : checking signature...");
             CertificateManage.checkSignature(certPart, certificateCA);
@@ -111,13 +111,13 @@ public class Decrypt2Ddoc {
             CertificateManage.checkRevocation(certPart);
         }
 
-        //Decode and verify the date validity and the revocation of the CertificateManage certificate
+        //Decode and verify the date validity and the revocation of the CA certificate
         if(!IdCA.equals("FR00")) {
             System.out.println("\nCertification Authority : checking revocation...");
             CertificateManage.checkRevocation(certificateCA);
         }
 
-        //Verify the signature of the CertificateManage certificate
+        //Verify the signature of the CA certificate
         if(!IdCA.equals("FR00")) {
             System.out.println("\nCertification Authority : checking signature...");
             CertificateManage.checkCASignature(certificateCA, IdCA);
@@ -125,7 +125,6 @@ public class Decrypt2Ddoc {
         }
 
         //Decode and verify the TSL
-        //TODO
         String TSLcertificate = CertificateManage.retrieveTSLCertificate();
         TSLcertificate = TSLcertificate.replaceAll("\\s", "");
         TSLcertificate = TSLcertificate.replaceAll(String.valueOf(Character.LINE_SEPARATOR), "");
