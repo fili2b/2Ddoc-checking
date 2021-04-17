@@ -1,6 +1,6 @@
 # 2Ddoc-checking
 
-Created by Alexis STOELTZlEN and Thérèse FILI for a cryptographic project.
+Created by Alexis STOELTZLEN and Thérèse FILI for a cryptographic project.
 
 ## Purpose 
 
