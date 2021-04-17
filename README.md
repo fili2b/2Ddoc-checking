@@ -1,5 +1,7 @@
 # 2Ddoc-checking
 
+Created by Alexis STOELTZlEN and Thérèse FILI for a cryptographic project.
+
 ## Purpose 
 
 This repository contains a Java code that allows you to verify a 2D-doc.
