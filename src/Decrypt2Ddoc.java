@@ -30,7 +30,7 @@ public class Decrypt2Ddoc {
 
         //Decode the image into a string
         System.out.println("\u001B[33m======= Start decoding =======\u001B[0m\n");
-        File QRCodeImage = new File("./images/DC03-FR00.png");
+        File QRCodeImage = new File("./images/DC02-FR04.png");
         if (QRCodeImage != null) {
             decodedQR = info.readQRCode(QRCodeImage);
         } else {
@@ -106,8 +106,8 @@ public class Decrypt2Ddoc {
         System.out.println("\nParticipant : checking revocation...");
         if(IdCA.equals("FR00")) {
             CertificateManage.checkRevocation(CertificateManage.convertStringToX509Cert(cert));
-        } else{
             CertificateManage.readCertificateInfo(CertificateManage.convertStringToX509Cert(cert));
+        } else {
             CertificateManage.checkRevocation(certPart);
         }
 
