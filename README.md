@@ -1,4 +1,4 @@
-# 2Ddoc-checking ![Profile views](https://gpvc.arturio.dev/Naereen)
+# 2Ddoc-checking 
 
 Created by Alexis STOELTZLEN and Thérèse FILI for a cryptographic project.
 
