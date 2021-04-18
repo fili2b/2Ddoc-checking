@@ -1,4 +1,6 @@
 # 2Ddoc-checking
+![Visits Badge](https://badges.pufler.dev/visits/fili2b/2Ddoc-checking)
+![GitHub repo size](https://img.shields.io/github/repo-size/fili2b/2Ddoc-checking?label=project%20size)
 
 Created by Alexis STOELTZLEN and Thérèse FILI for a cryptographic project.
 
