@@ -6,13 +6,7 @@ Created by Alexis STOELTZLEN and Thérèse FILI for a cryptographic project.
 
 ## Purpose 
 
-This repository contains a Java code that allows you to verify a 2D-doc.
-
-## Contents of the repository
-
-There are 2 folders :
-- images folder : contains 2D-doc images that have been verified by the code
-- src : contains the source code
+This repository contains a Java code that allows you to verify the integrity of a 2D-doc.
 
 ## Usage
 
