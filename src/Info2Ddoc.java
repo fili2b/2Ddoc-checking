@@ -44,7 +44,7 @@ public class Info2Ddoc {
             MultiFormatReader reader = new MultiFormatReader();// use this otherwise
 
             result = reader.decodeWithState(bitmap);
-            System.out.println("[QR code result] " + result.getText()+"\n");
+            System.out.println("\u001B[31m[QR code result] \u001B[0m" + result.getText()+"\n");
             return result.getText();
         } catch (NotFoundException e) {
             // TODO Auto-generated catch block

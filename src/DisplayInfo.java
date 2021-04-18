@@ -236,7 +236,7 @@ public class DisplayInfo {
 
     void printMessageInfo(String message) {
         byte[] messageByte = message.getBytes(StandardCharsets.UTF_8);
-        System.out.println("[2D doc Information]");
+        System.out.println("\u001B[31m[2D doc Information]\u001B[0m");
         for (this.indice=0; this.indice < messageByte.length; this.indice++) {
             if(this.indice != 0)
                 this.indice--;

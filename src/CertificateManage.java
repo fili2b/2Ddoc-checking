@@ -66,7 +66,7 @@ public class CertificateManage {
     }
 
     public static void readCertificateInfo(X509Certificate certificate) throws CertificateException {
-        System.out.println("[Read in the participant certificate]");
+        System.out.println("\u001B[31m[Read in the participant certificate]\u001B[0m");
         System.out.println("\t- Certificate for: " + certificate.getSubjectDN());
         System.out.println("\t- Certificate issued by: " + certificate.getIssuerDN());
         System.out.println("\t- The certificate is valid from " + certificate.getNotBefore() + " to " + certificate.getNotAfter());
@@ -235,7 +235,7 @@ public class CertificateManage {
 
     public static boolean checkSignature(X509Certificate certificate, X509Certificate certificateCA) {
 
-        System.out.println("[Verifying Signature]");
+        System.out.println("\u001B[31m[Verifying Signature]\u001B[0m");
         try {
             certificate.verify(certificateCA.getPublicKey());
             System.out.println("\tSignature Verification : OK");
@@ -278,7 +278,7 @@ public class CertificateManage {
 
     public static void checkRevocation(X509Certificate certificate) throws CertificateException, IOException, CRLException, NamingException {
 
-        System.out.println("[Verifying Revocation]");
+        System.out.println("\u001B[31m[Verifying Revocation]\u001B[0m");
         try {
             List<String> crlDistPoints = getCrlDistributionPoints(certificate);
             if (crlDistPoints == null){
@@ -302,7 +302,7 @@ public class CertificateManage {
             }
         }
 
-        System.out.println("[Verifying Date]");
+        System.out.println("\u001B[31m[Verifying Date]\u001B[0m");
         try {
             certificate.checkValidity();
             System.out.println("\tDate Verification : OK");

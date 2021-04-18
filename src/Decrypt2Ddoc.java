@@ -39,11 +39,11 @@ public class Decrypt2Ddoc {
         System.out.println("\u001B[33m======= Start retrieving informations =======\u001B[0m\n");
         //Get the header of the entire decoded message
         String header = info.getHeader(decodedQR);
-        System.out.println("[HEADER] " + header);
+        System.out.println("\u001B[31m[HEADER] \u001B[0m" + header);
 
         //Get the data of the entire decoded message
         String data = info.getMessage(decodedQR);
-        System.out.println("[DATA] " + data);
+        System.out.println("\u001B[31m[DATA] \u001B[0m" + data);
 
         //Display the contain of the message
         DisplayInfo disInfo = new DisplayInfo();
@@ -53,20 +53,20 @@ public class Decrypt2Ddoc {
 
         //Get the signature of the entire decoded message
         String signature2Ddoc = info.getSignature(decodedQR);
-        System.out.println("[SIGNATURE] " + signature2Ddoc);
+        System.out.println("\u001B[31m[SIGNATURE] \u001B[0m" + signature2Ddoc);
 
         //Get the ID of the Certificate Authority
         String IdCA = info.getCA(header);
-        System.out.println("[CertificateManage] " + IdCA);
+        System.out.println("\n\u001B[31m[CA Certificat ID] \u001B[0m" + IdCA);
 
         //Get the Participant certificate ID
         String certID = info.getcertID(header);
-        System.out.println("[Certificate ID] " + certID);
+        System.out.println("\u001B[31m[Participant Certificate ID] \u001B[0m" + certID);
 
         //Get the url for all certificates
         if(!IdCA.equals("FR00")){
             String certURL = Info2Ddoc.getcertURL(IdCA);
-            System.out.println("[Certificate URL] " + certURL);
+            System.out.println("\u001B[31m[Certificate URL] \u001B[0m" + certURL);
         }
 
         //Get the right Participant certificate from the URL
@@ -88,7 +88,7 @@ public class Decrypt2Ddoc {
 
         System.out.println("\n\u001B[33m======= Start checking =======\u001B[0m");
         //Check the 2D doc signature with the participant public key
-        System.out.println("\n2D-document : checking signature...");
+        System.out.println("\nm2D-document : checking signature...");
         if(!IdCA.equals("FR00")) {
             verify2Dsignature(certPart, signature2Ddoc, header, data);
         } else {
@@ -132,7 +132,8 @@ public class Decrypt2Ddoc {
         System.out.println("\nTSL signature : "+TSLsignature);
 
         X509Certificate TSLX509Cert = CertificateManage.convertStringToX509Cert(TSLcertificate);
-        checkTSLSignature(TSLX509Cert, TSLsignature, TSLcertificate);
+        //This function doesn't work yet
+        //checkTSLSignature(TSLX509Cert, TSLsignature, TSLcertificate);
     }
 
     public static X509Certificate convertToX509Cert(String certificateString) throws CertificateException {
